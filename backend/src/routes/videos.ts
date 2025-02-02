@@ -1,23 +1,23 @@
-import express, { type Request, type Response, NextFunction } from "express"
-import multer from "multer"
-import path from "path"
-import fs from "fs"
-import mongoose, { Types, ObjectId } from "mongoose"
+import express, { Request, Response, NextFunction } from "express"
+import multer, { Multer } from "multer"
+import mongoose, { Types } from "mongoose"
 import {
   Video,
   User,
   Comment,
   Tip,
-  VideoDocument,
   type UserDocument,
-  CommentDocument,
-  TipDocument,
 } from "../models/schemas"
-import { verifyToken } from "./users"
+import { verifyToken } from "../middleware/auth"
 import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { v4 as uuidv4 } from "uuid"
 import type { PutObjectCommandInput } from "@aws-sdk/client-s3"
+
+interface MulterRequest extends Request {
+  file?: Express.Multer.File
+  userId?: string
+}
 
 const router = express.Router()
 
@@ -29,16 +29,25 @@ const s3Client = new S3Client({
   },
 })
 
-const upload = multer({ storage: multer.memoryStorage() })
+const upload: Multer = multer({ storage: multer.memoryStorage() })
 
-router.post("/", verifyToken, upload.single("video"), async (req: Request, res: Response) => {
+router.post("/", verifyToken, (req: Request, res: Response, next: NextFunction) => {
+  upload.single("video")(req as any, res as any, (err: any) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ message: err.message });
+    } else if (err) {
+      return res.status(500).json({ message: 'Error uploading file' });
+    }
+    next();
+  });
+}, async (req: MulterRequest, res: Response) => {
   if (!req.file) {
     return res.status(400).json({ message: "No video file uploaded" })
   }
 
   const file = req.file
   const { title, description, privacy, thumbnail } = req.body
-  const userId = (req as any).userId
+  const userId = req.userId
 
   try {
     console.log("Starting video upload process")
@@ -177,10 +186,10 @@ router.get("/:id", async (req: Request, res: Response) => {
   }
 })
 
-router.post("/:id/like", verifyToken, async (req: Request, res: Response) => {
+router.post("/:id/like", verifyToken, async (req: MulterRequest, res: Response) => {
   try {
     const videoId = req.params.id
-    const userId = (req as any).userId
+    const userId = req.userId
 
     const video = await Video.findById(videoId)
     if (!video) {
@@ -216,10 +225,10 @@ router.post("/:id/like", verifyToken, async (req: Request, res: Response) => {
   }
 })
 
-router.post("/:id/comment", verifyToken, async (req: Request, res: Response) => {
+router.post("/:id/comment", verifyToken, async (req: MulterRequest, res: Response) => {
   try {
     const videoId = req.params.id
-    const userId = (req as any).userId
+    const userId = req.userId
     const { content } = req.body
 
     const video = await Video.findById(videoId)
@@ -270,34 +279,38 @@ router.get("/:id/comments", async (req: Request, res: Response) => {
   }
 })
 
-router.delete("/:id/comments/:commentId", verifyToken, async (req: Request, res: Response) => {
+router.delete("/:id/comments/:commentId", verifyToken, async (req: MulterRequest, res: Response) => {
   try {
-    const { id: videoId, commentId } = req.params
-    const userId = (req as any).userId
+    const { id: videoId, commentId } = req.params;
+    const userId = req.userId;
 
-    const comment = await Comment.findById(commentId)
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    const comment = await Comment.findById(commentId);
     if (!comment) {
-      return res.status(404).json({ message: "Comment not found" })
+      return res.status(404).json({ message: "Comment not found" });
     }
 
-    if (!comment.user.equals(userId)) {
-      return res.status(403).json({ message: "You are not authorized to delete this comment" })
+    if (comment.user.toString() !== userId) {
+      return res.status(403).json({ message: "You are not authorized to delete this comment" });
     }
 
-    await Comment.findByIdAndDelete(commentId)
+    await Comment.findByIdAndDelete(commentId);
 
-    const video = await Video.findById(videoId)
+    const video = await Video.findById(videoId);
     if (video) {
-      video.comments = video.comments.filter((id: Types.ObjectId) => !id.equals(new Types.ObjectId(commentId)))
-      await video.save()
+      video.comments = video.comments.filter((id) => !id.equals(commentId));
+      await video.save();
     }
 
-    res.json({ message: "Comment deleted successfully" })
+    res.json({ message: "Comment deleted successfully" });
   } catch (error) {
-    console.error("Error deleting comment:", error)
-    res.status(500).json({ message: "Server error while deleting comment" })
+    console.error("Error deleting comment:", error);
+    res.status(500).json({ message: "Server error while deleting comment" });
   }
-})
+});
 
 router.get("/liked/:userId", verifyToken, async (req: Request, res: Response) => {
   try {
@@ -342,10 +355,10 @@ router.get("/liked/:userId", verifyToken, async (req: Request, res: Response) =>
   }
 })
 
-router.delete("/:id", verifyToken, async (req: Request, res: Response) => {
+router.delete("/:id", verifyToken, async (req: MulterRequest, res: Response) => {
   try {
     const videoId = req.params.id
-    const userId = (req as any).userId
+    const userId = req.userId
 
     console.log("Attempting to delete video:", videoId)
     console.log("User ID:", userId)
@@ -389,10 +402,10 @@ router.delete("/:id", verifyToken, async (req: Request, res: Response) => {
   }
 })
 
-router.post("/:id/tip", verifyToken, async (req: Request, res: Response) => {
+router.post("/:id/tip", verifyToken, async (req: MulterRequest, res: Response) => {
   try {
     const videoId = req.params.id
-    const senderId = (req as any).userId
+    const senderId = req.userId
     const { amount } = req.body
 
     if (!amount || amount < 1) {
@@ -477,135 +490,3 @@ router.get("/:id/tips/summary", verifyToken, async (req: Request, res: Response)
 })
 
 export default router
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -4,8 +4,8 @@
     "module": "commonjs",
     "lib": ["es6", "dom"],
     "allowJs": true,
-    "outDir": "build",
-    "rootDir": ".",
+    "outDir": "dist",
+    "rootDir": "src",
     "strict": true,
     "noImplicitAny": true,
     "esModuleInterop": true,
@@ -13,38 +13,12 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
-    "typeRoots": ["./node_modules/@types", "./types"],
+    "typeRoots": ["./node_modules/@types", "./src/types"],
     "types": ["node", "express", "express-session", "multer"],
     "paths": {
-      "express": ["./node_modules/@types/express"]
+      "@/*": ["./src/*"]
     }
   },
-  "include": ["**/*.ts", "types/**/*.d.ts"],
-  "exclude": ["node_modules"]
+  "include": ["src/**/*.ts", "src/**/*.js", "src/types/**/*.d.ts"],
+  "exclude": ["node_modules", "dist"]
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

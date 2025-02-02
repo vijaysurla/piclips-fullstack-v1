@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import { User, Video } from '../models/schemas';
-import config from '../config';
+import { User, Video } from '../src/models/schemas';
+import config from '../src/config';
 
 async function updateVideoCount() {
   try {

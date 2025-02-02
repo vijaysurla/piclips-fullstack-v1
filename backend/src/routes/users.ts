@@ -89,12 +89,21 @@ export const verifyToken = (req: AuthenticatedRequest, res: Response, next: Next
 };
 
 // Update avatar
-router.post('/:id/avatar', verifyToken, upload.single('avatar'), async (req: AuthenticatedRequest, res: Response) => {
+router.post('/:id/avatar', verifyToken, (req: Request, res: Response, next: NextFunction) => {
+  upload.single('avatar')(req as any, res as any, (err: any) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ message: err.message });
+    } else if (err) {
+      return res.status(500).json({ message: 'Error uploading file' });
+    }
+    next();
+  });
+}, async (req: Request & { file?: Express.Multer.File }, res: Response) => {
   try {
     const userId = req.params.id;
     
     // Verify user is updating their own profile
-    if (userId !== req.userId) {
+    if (userId !== (req as AuthenticatedRequest).userId) {
       return res.status(403).json({ message: 'Not authorized to update this profile' });
     }
 
@@ -198,53 +207,4 @@ router.get('/:id', verifyToken, async (req: AuthenticatedRequest, res: Response)
   }
 });
 
-// Other routes remain the same...
-
 export default router;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

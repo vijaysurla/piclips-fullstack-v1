@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import { Video, Comment } from './models/schemas';
-import config from './config';
+import { Video, Comment } from './src/models/schemas';
+import config from './src/config';
 
 async function deleteComment(commentId: string) {
   try {

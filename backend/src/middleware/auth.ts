@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { APIUserScopes, APIPayment } from '@pinetwork-js/api-typing';
+import jwt from 'jsonwebtoken';
 import config from '../config';
 
 // Mock Pi object for server-side use
@@ -44,23 +45,19 @@ export const authenticatePiUser = async (req: Request, res: Response, next: Next
   }
 };
 
+// New verifyToken middleware
+export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
+  const token = req.header('Authorization')?.replace('Bearer ', '');
 
+  if (!token) {
+    return res.status(401).json({ message: 'No token, authorization denied' });
+  }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  try {
+    const decoded = jwt.verify(token, config.jwtSecret) as { userId: string };
+    (req as any).userId = decoded.userId;
+    next();
+  } catch (error) {
+    res.status(401).json({ message: 'Token is not valid' });
+  }
+};
