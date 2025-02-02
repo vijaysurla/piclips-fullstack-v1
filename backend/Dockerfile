@@ -1,32 +1,57 @@
-FROM node:16
+# Build stage
+FROM node:18.17.1-bullseye-slim AS builder
 
-# Create app directory
+# Set working directory
 WORKDIR /usr/src/app
 
-# Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-# where available (npm@5+)
-COPY package.json ./
-COPY yarn.lock ./
+# Copy package files
+COPY package.json yarn.lock ./
 
-# When building for production, use the lockfile as-is:
+# Install dependencies
 RUN yarn install --frozen-lockfile
-# RUN npm ci --only=production
 
-# Bundle app source
-# TODO make this only copy the necessary files instead of copying the whole directory
-COPY ./src ./src
-COPY ./tsconfig.json ./tsconfig.json
+# Copy application code
+COPY . .
 
+# Build the application
 RUN yarn build
 
-RUN yarn global add pm2
-COPY ./docker/processes.config.js ./processes.config.js
+# Production stage
+FROM node:18.17.1-alpine3.18
 
-RUN mkdir -p log && touch log/.keep
+# Set working directory
+WORKDIR /usr/src/app
 
-EXPOSE 8080
-CMD [ "pm2-runtime", "./processes.config.js" ]
+# Copy package files
+COPY --from=builder /usr/src/app/package.json ./
+COPY --from=builder /usr/src/app/yarn.lock ./
 
-# CMD [ "pm2-runtime", "build/index.js" ]
-# CMD [ "node", "build/index.js" ]
+# Install production dependencies
+RUN yarn install --frozen-lockfile --production && \
+    yarn cache clean
+
+# Copy built application
+COPY --from=builder /usr/src/app/dist ./dist
+
+# Create a non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Set ownership and permissions
+RUN chown -R appuser:appgroup /usr/src/app
+
+# Switch to non-root user
+USER appuser
+
+# Expose port (Cloud Run will override this, but it's good for documentation)
+EXPOSE 5001
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s \
+    CMD wget -qO- http://localhost:8080/health || exit 1
+
+# Start the application
+CMD ["node", "dist/server.js"]

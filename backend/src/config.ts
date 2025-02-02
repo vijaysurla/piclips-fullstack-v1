@@ -14,20 +14,5 @@ export default {
     password: process.env.MONGODB_PASSWORD,
   },
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
-  port: process.env.PORT || 5001,
+  port: parseInt(process.env.PORT || '5001', 10),
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
