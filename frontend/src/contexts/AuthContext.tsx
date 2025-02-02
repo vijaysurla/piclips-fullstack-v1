@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import axios from 'axios';
 import { User } from '../types/user';
 
+const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -29,7 +31,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const checkAuthStatus = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/users/me', {
+      const response = await axios.get(`${apiUrl}/api/users/me`, {
         withCredentials: true
       });
       setUser(response.data);

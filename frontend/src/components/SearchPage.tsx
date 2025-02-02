@@ -6,6 +6,8 @@ import { Input } from "./ui/input";
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 
+const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 interface SearchResult {
   _id: string;
   username: string;
@@ -38,7 +40,7 @@ const SearchPage: React.FC = () => {
 
   const performSearch = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/search`, {
+      const response = await axios.get(`${apiUrl}/api/search`, {
         params: { 
           term: searchTerm, 
           type: searchType 

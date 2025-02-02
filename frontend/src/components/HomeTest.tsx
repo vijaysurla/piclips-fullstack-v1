@@ -28,12 +28,12 @@ const HomeTest: React.FC = () => {
   const [videoError, setVideoError] = useState<string | null>(null)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const { token } = useAuth()
-
+  
   useEffect(() => {
     const fetchVideo = async () => {
       try {
         console.log("Fetching video...")
-        const response = await axios.get("http://localhost:5000/api/videos-test/678ece731f24c5f493fab49a", {
+        const response = await axios.get('process.env.NEXT_PUBLIC_API_URL/api/videos-test/678ece731f24c5f493fab49a', {
           headers: {
             Authorization: `Bearer ${token}`,
           },

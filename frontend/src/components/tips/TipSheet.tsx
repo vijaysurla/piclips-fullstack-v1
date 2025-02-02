@@ -12,6 +12,8 @@ import {
 import { useToast } from "../ui/use-toast"
 import { useNavigate } from 'react-router-dom';
 
+const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 interface Tip {
   id: string;
   userId: string;
@@ -69,7 +71,7 @@ export default function TipSheet({ video, isOpen, onClose, currentUser, token }:
     if (!video || !token) return
     
     try {
-      const response = await fetch(`http://localhost:5000/api/videos/${video._id}/tips`, {
+      const response = await fetch(`${apiUrl}/api/videos/${video._id}/tips`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -109,7 +111,7 @@ export default function TipSheet({ video, isOpen, onClose, currentUser, token }:
 
     setIsSubmitting(true)
     try {
-      const response = await fetch(`http://localhost:5000/api/videos/${video._id}/tip`, {
+      const response = await fetch(`${apiUrl}/api/videos/${video._id}/tip`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -184,7 +186,7 @@ export default function TipSheet({ video, isOpen, onClose, currentUser, token }:
             <div className="h-1/3 bg-black relative">
               <video
                 ref={videoRef}
-                src={video.url.startsWith('http') ? video.url : `http://localhost:5000${video.url}`}
+                src={video.url.startsWith('http') ? video.url : `${apiUrl}${video.url}`}
                 className="w-full h-full object-contain"
                 playsInline
                 muted={false}
@@ -256,7 +258,7 @@ export default function TipSheet({ video, isOpen, onClose, currentUser, token }:
                       <div key={tip.id} className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
                           <AvatarImage 
-                            src={tip.avatar.startsWith('http') ? tip.avatar : `http://localhost:5000${tip.avatar}`} 
+                            src={tip.avatar.startsWith('http') ? tip.avatar : `${apiUrl}${tip.avatar}`} 
                           />
                           <AvatarFallback>{tip.username[0].toUpperCase()}</AvatarFallback>
                         </Avatar>

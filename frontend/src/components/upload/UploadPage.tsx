@@ -17,6 +17,8 @@ import {
 import axios from 'axios'
 import { useAuth } from '../../contexts/AuthContext'
 
+const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 interface VideoFile {
   id: string
   url: string
@@ -111,10 +113,10 @@ export default function UploadPage() {
         throw new Error('No video file selected');
       }
 
-      console.log('Sending request to:', 'http://localhost:5000/api/videos');
+      console.log('Sending request to:', `${apiUrl}/api/videos`);
       console.log('FormData contents:', Object.fromEntries(formData.entries()));
 
-      const response = await axios.post('http://localhost:5000/api/videos', formData, {
+      const response = await axios.post(`${apiUrl}/api/videos`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`

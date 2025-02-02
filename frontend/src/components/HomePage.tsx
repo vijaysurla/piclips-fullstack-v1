@@ -29,6 +29,13 @@ import axios from "axios"
 import { useAuth } from "../contexts/AuthContext"
 import TipSheet from "./tips/TipSheet"
 
+const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+//console.log('API_URL:', process.env.REACT_APP_API_URL);
+//console.log('apiUrl:', apiUrl);
+  //console.log('NODE_ENV:', process.env.NODE_ENV);
+  //console.log('All env variables:', process.env);
+
 interface VideoPlayerProps {
   video: Video
   isActive: boolean
@@ -176,13 +183,14 @@ const HomePage: React.FC = () => {
 
   const fetchVideos = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/videos", {
+      console.log('Fetching videos from:', `${apiUrl}/api/videos`);
+      const response = await axios.get(`${apiUrl}/api/videos`, {
         withCredentials: true,
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      })
-
+      });
+     
       console.log("Raw response data:", response.data)
 
       const fetchedVideos: Video[] = response.data.map((video: any) => ({
@@ -191,12 +199,12 @@ const HomePage: React.FC = () => {
         url: video.signedUrl || video.url,
         thumbnail: video.thumbnail?.startsWith("http")
           ? video.thumbnail
-          : `http://localhost:5000${video.thumbnail || "/placeholder.svg"}`,
+          : `${apiUrl}${video.thumbnail || "/placeholder.svg"}`,
         user: {
           _id: video.user?._id || "unknown",
           username: video.user?.username || "Anonymous",
           displayName: video.user?.displayName || "Anonymous",
-          avatar: video.user?.avatar ? `http://localhost:5000${video.user.avatar}?t=${Date.now()}` : "/placeholder.svg",
+          avatar: video.user?.avatar ? `${apiUrl}${video.user.avatar}?t=${Date.now()}` : "/placeholder.svg",
         },
         likes: video.likes || [],
         views: video.views || 0,
@@ -249,7 +257,7 @@ const HomePage: React.FC = () => {
       )
 
       const response = await axios.post(
-        `http://localhost:5000/api/videos/${videoId}/like`,
+        `${apiUrl}/api/videos/${videoId}/like`,
         {
           userId: user._id,
         },
@@ -325,7 +333,7 @@ const HomePage: React.FC = () => {
     }
 
     try {
-      const response = await axios.post(`http://localhost:5000/api/users/${userId}/follow`, {
+      const response = await axios.post(`${apiUrl}/api/users/${userId}/follow`, {
         followerId: user._id,
       })
 
@@ -533,7 +541,7 @@ const HomePage: React.FC = () => {
         <Button variant="ghost" size="icon" className="text-white" onClick={() => navigate("/profile")}>
           {user && user.avatar ? (
             <img
-              src={user.avatar.startsWith("http") ? user.avatar : `http://localhost:5000${user.avatar}?t=${Date.now()}`}
+              src={user.avatar.startsWith("http") ? user.avatar : `${apiUrl}${user.avatar}?t=${Date.now()}`}
               alt={user.username}
               className="h-6 w-6 rounded-full object-cover"
             />

@@ -21,6 +21,8 @@ import {
   AlertDialogTitle,
 } from "./ui/alert-dialog"
 
+const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 interface Video {
   _id: string;
   title: string;
@@ -61,19 +63,19 @@ export default function Profile() {
         throw new Error('No user ID available');
       }
 
-      const userResponse = await axios.get(`http://localhost:5000/api/users/${userId}`, {
+      const userResponse = await axios.get(`${apiUrl}/api/users/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       let uploadedVideos = [];
       let likedVideos = [];
       try {
-        const uploadedVideosResponse = await axios.get(`http://localhost:5000/api/videos/user/${userId}`, {
+        const uploadedVideosResponse = await axios.get(`${apiUrl}/api/videos/user/${userId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         uploadedVideos = uploadedVideosResponse.data;
 
-        const likedVideosResponse = await axios.get(`http://localhost:5000/api/videos/liked/${userId}`, {
+        const likedVideosResponse = await axios.get(`${apiUrl}/api/videos/liked/${userId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         likedVideos = likedVideosResponse.data;
@@ -118,7 +120,7 @@ export default function Profile() {
     if (!videoId || !token) return;
 
     try {
-      const response = await axios.delete(`http://localhost:5000/api/videos/${videoId}`, {
+      const response = await axios.delete(`${apiUrl}/api/videos/${videoId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -169,7 +171,7 @@ export default function Profile() {
             className="relative aspect-square group cursor-pointer overflow-hidden bg-zinc-800"
           >
             <video
-              src={`http://localhost:5000${video.url}`}
+              src={`${apiUrl}${video.url}`}
               className="w-full h-full object-cover"
               loop
               muted
@@ -262,7 +264,7 @@ export default function Profile() {
           <div className="relative group">
             <Avatar className="h-24 w-24 border-2 border-zinc-700">
               <AvatarImage 
-                src={`http://localhost:5000${profile?.avatar || "/placeholder.svg"}?t=${Date.now()}`} 
+                src={`${apiUrl}${profile?.avatar || "/placeholder.svg"}?t=${Date.now()}`} 
                 alt={profile?.displayName || profile?.username}
               />
               <AvatarFallback className="bg-zinc-800 text-white text-xl">

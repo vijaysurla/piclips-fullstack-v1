@@ -8,6 +8,8 @@ import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { useToast } from "./ui/use-toast";
 
+const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 interface FormData {
   displayName: string;
   username: string;
@@ -77,7 +79,7 @@ export default function EditProfile() {
 
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/users/${user?._id}/avatar`,
+        `${apiUrl}/api/users/${user?._id}/avatar`,
         formData,
         {
           headers: {
@@ -114,7 +116,7 @@ export default function EditProfile() {
     setIsSubmitting(true);
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/users/${user._id}`,
+        `${apiUrl}/api/users/${user._id}`,
         formData,
         {
           headers: {
@@ -167,7 +169,7 @@ export default function EditProfile() {
           <div className="relative group">
             <div className="w-24 h-24 rounded-full overflow-hidden bg-zinc-800">
               <img
-                src={previewImage || (user?.avatar ? `http://localhost:5000${user.avatar}` : "/placeholder.svg")}
+                src={previewImage || (user?.avatar ? `${apiUrl}${user.avatar}` : "/placeholder.svg")}
                 alt="Profile"
                 className="w-full h-full object-cover"
               />

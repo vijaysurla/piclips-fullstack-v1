@@ -18,6 +18,8 @@ import {
 } from "../../components/ui/sheet"
 import axios from 'axios'
 
+const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 interface Video {
   url: string;
   _id: string; // Added _id property
@@ -73,7 +75,7 @@ export default function CommentsSheet({ video, isOpen, onClose, currentUser, set
   const fetchComments = async () => {
     if (!video) return;
     try {
-      const response = await axios.get(`http://localhost:5000/api/videos/${video._id}/comments`, {
+      const response = await axios.get(`${apiUrl}/api/videos/${video._id}/comments`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -101,7 +103,7 @@ export default function CommentsSheet({ video, isOpen, onClose, currentUser, set
     if (!currentUser || !newComment.trim() || !token || !video) return
 
     try {
-      const response = await axios.post(`http://localhost:5000/api/videos/${video._id}/comment`, {
+      const response = await axios.post(`${apiUrl}/api/videos/${video._id}/comment`, {
         content: newComment
       }, {
         headers: {
@@ -138,7 +140,7 @@ export default function CommentsSheet({ video, isOpen, onClose, currentUser, set
     if (!currentUser || !token || !video) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/videos/${video._id}/comments/${commentId}`, {
+      await axios.delete(`${apiUrl}/api/videos/${video._id}/comments/${commentId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -194,7 +196,7 @@ export default function CommentsSheet({ video, isOpen, onClose, currentUser, set
   const renderComment = (comment: Comment, isReply = false) => (
     <div key={comment.id} className="flex gap-3 py-3">
       <Avatar className="h-8 w-8">
-        <AvatarImage src={`${comment.avatar.startsWith('http') ? comment.avatar : `http://localhost:5000${comment.avatar}`}?t=${Date.now()}`} />
+        <AvatarImage src={`${comment.avatar.startsWith('http') ? comment.avatar : `${apiUrl}${comment.avatar}`}?t=${Date.now()}`} />
         <AvatarFallback>{comment.username?.[0]?.toUpperCase() || '?'}</AvatarFallback>
       </Avatar>
       <div className="flex-1 space-y-1">
@@ -275,7 +277,7 @@ export default function CommentsSheet({ video, isOpen, onClose, currentUser, set
             <div className="h-1/3 bg-black relative">
               <video
                 ref={videoRef}
-                src={video.url.startsWith('http') ? video.url : `http://localhost:5000${video.url}`}
+                src={video.url.startsWith('http') ? video.url : `${apiUrl}${video.url}`}
                 className="w-full h-full object-contain"
                 playsInline
                 muted={false}
@@ -306,7 +308,7 @@ export default function CommentsSheet({ video, isOpen, onClose, currentUser, set
               <div className="absolute bottom-0 left-0 right-0 border-t border-zinc-800 bg-zinc-900 p-4">
                 <div className="flex items-center gap-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={`${currentUser.avatar.startsWith('http') ? currentUser.avatar : `http://localhost:5000${currentUser.avatar}`}?t=${Date.now()}`} />
+                    <AvatarImage src={`${currentUser.avatar.startsWith('http') ? currentUser.avatar : `${apiUrl}${currentUser.avatar}`}?t=${Date.now()}`} />
                     <AvatarFallback>{currentUser.username?.[0]?.toUpperCase() || '?'}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 flex items-center gap-2">

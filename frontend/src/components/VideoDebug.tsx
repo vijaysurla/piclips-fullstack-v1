@@ -62,7 +62,7 @@ const VideoDebug: React.FC = () => {
       try {
         console.log("Making request to /api/videos with token:", token?.substring(0, 10) + "...")
 
-        const response = await axios.get<Video[]>("http://localhost:5000/api/videos", {
+        const response = await axios.get<Video[]>("process.env.REACT_APP_API_URL/api/videos", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

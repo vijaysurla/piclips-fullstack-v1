@@ -14,7 +14,7 @@ import SearchPage from "./components/SearchPage"
 
 // Set default axios configuration
 axios.defaults.withCredentials = true
-axios.defaults.baseURL = "http://localhost:5000" // Adjust this if your backend URL is different
+axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000' // Adjust this if your backend URL is different
 
 // ProtectedRoute component to handle authentication
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
