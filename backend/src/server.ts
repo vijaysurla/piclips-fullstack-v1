@@ -19,6 +19,11 @@ declare module 'express-session' {
 
 const app = express();
 
+const allowedOrigins = [
+  'https://pi-clips-frontend-651048061269.us-east1.run.app',
+  'http://localhost:3000'
+];
+
 // Connect to MongoDB
 mongoose.connect(config.mongodb.uri, {
   user: config.mongodb.username,
@@ -36,7 +41,15 @@ mongoose.connect(config.mongodb.uri, {
 
 // CORS configuration
 app.use(cors({
-  origin: config.frontendUrl,
+  origin: function(origin, callback) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if(!origin) return callback(null, true);
+    if(allowedOrigins.indexOf(origin) === -1){
+      var msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
