@@ -29,12 +29,12 @@ import axios from "axios"
 import { useAuth } from "../contexts/AuthContext"
 import TipSheet from "./tips/TipSheet"
 
-const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5000"
 
-console.log('API_URL:', process.env.REACT_APP_API_URL);
-console.log('apiUrl:', apiUrl);
-  //console.log('NODE_ENV:', process.env.NODE_ENV);
-  //console.log('All env variables:', process.env);
+console.log("API_URL:", process.env.REACT_APP_API_URL)
+console.log("apiUrl:", apiUrl)
+//console.log('NODE_ENV:', process.env.NODE_ENV);
+//console.log('All env variables:', process.env);
 
 interface VideoPlayerProps {
   video: Video
@@ -179,18 +179,18 @@ const HomePage: React.FC = () => {
 
   useEffect(() => {
     fetchVideos()
-  }, [user])
+  }, []) // Removed unnecessary dependency 'user'
 
   const fetchVideos = async () => {
     try {
-      console.log('Fetching videos from:', `${apiUrl}/api/videos`);
+      console.log("Fetching videos from:", `${apiUrl}/api/videos`)
       const response = await axios.get(`${apiUrl}/api/videos`, {
         withCredentials: true,
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      });
-     
+      })
+
       console.log("Raw response data:", response.data)
 
       const fetchedVideos: Video[] = response.data.map((video: any) => ({
@@ -206,13 +206,13 @@ const HomePage: React.FC = () => {
           displayName: video.user?.displayName || "Anonymous",
           avatar: video.user?.avatar ? `${apiUrl}${video.user.avatar}?t=${Date.now()}` : "/placeholder.svg",
         },
-        likes: video.likes || [],
+        likes: Array.isArray(video.likes) ? video.likes : [],
         views: video.views || 0,
         comments: video.comments || [],
         shares: video.shares || 0,
         tips: video.tips || 0,
         music: video.music || "Original Audio",
-        isLiked: video.likes?.includes(user?._id) || false,
+        isLiked: Array.isArray(video.likes) && user?._id ? video.likes.includes(user._id) : false,
         commentCount: video.comments?.length || 0,
       }))
 
@@ -258,9 +258,7 @@ const HomePage: React.FC = () => {
 
       const response = await axios.post(
         `${apiUrl}/api/videos/${videoId}/like`,
-        {
-          userId: user._id,
-        },
+        {},
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -438,7 +436,7 @@ const HomePage: React.FC = () => {
                   >
                     <Heart className={`h-7 w-7 ${video.isLiked ? "fill-[#d6191e] text-[#d6191e]" : "text-white"}`} />
                   </Button>
-                  <span className="text-sm">{video.likes.length.toLocaleString()}</span>
+                  <span className="text-sm">{(video.likes?.length || 0).toLocaleString()}</span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
                   <Button
@@ -615,131 +613,4 @@ const HomePage: React.FC = () => {
 }
 
 export default HomePage
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

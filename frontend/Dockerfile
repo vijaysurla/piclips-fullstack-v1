@@ -12,9 +12,9 @@ COPY . .
 ENV NODE_ENV=production
 
 # Add all environment variables needed at build time
-ARG REACT_APP_API_URL
-ARG REACT_APP_BACKEND_URL
-ARG REACT_APP_SANDBOX_SDK
+ARG REACT_APP_API_URL="https://piclips-backend-874147568003.us-east1.run.app"
+ARG REACT_APP_BACKEND_URL="https://testnet.piclips.com"
+ARG REACT_APP_SANDBOX_SDK="true"
 
 ENV REACT_APP_API_URL=$REACT_APP_API_URL
 ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
