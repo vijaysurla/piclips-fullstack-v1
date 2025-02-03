@@ -218,7 +218,7 @@ router.post("/:id/like", verifyToken, async (req: MulterRequest, res: Response) 
     await video.save()
     await user.save()
 
-    res.json({ likes: video.likes.length, isLiked: likedIndex === -1 })
+    res.json({ likes: video.likes, isLiked: likedIndex === -1 })
   } catch (error) {
     console.error("Error liking/unliking video:", error)
     res.status(500).json({ message: "Server error while processing like/unlike" })
