@@ -20,8 +20,10 @@ declare module 'express-session' {
 const app = express();
 
 const allowedOrigins = [
-  'https://pi-clips-frontend-651048061269.us-east1.run.app',
-  'http://localhost:3000'
+  'https://pi-clips-frontend-651048061269.us-east1.run.app', //Cloud Run URL
+  'http://localhost:3000', //Local frontend
+  'https://piclips.com',   // Production frontend
+  'https://testnet.piclips.com' // Testnet frontend
 ];
 
 // Connect to MongoDB
@@ -40,20 +42,29 @@ mongoose.connect(config.mongodb.uri, {
 });
 
 // CORS configuration
-app.use(cors({
-  origin: function(origin, callback) {
-    // allow requests with no origin (like mobile apps or curl requests)
-    if(!origin) return callback(null, true);
-    if(allowedOrigins.indexOf(origin) === -1){
-      var msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  console.log('Incoming request origin:', origin);
+  console.log('Allowed origins:', allowedOrigins);
+
+  if (origin && allowedOrigins.includes(origin)) {
+    console.log('Origin is allowed, setting CORS headers');
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  } else {
+    console.log('Origin is not allowed');
+  }
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS preflight request');
+    return res.status(200).end();
+  }
+  
+  next();
+});
 
 // Body parser configuration with increased limits
 app.use(express.json({ limit: '50mb' }));
@@ -97,6 +108,11 @@ app.use('/api/videos', videoRoutes);
 app.use("/api/videos-test", videoTestRoutes) // New test route
 // Add the search route to your Express app
 app.use('/api/search', searchRoutes);
+
+// Add the test CORS route here
+app.get('/api/test-cors', (req, res) => {
+  res.json({ message: 'CORS is working' });
+});
 
 // Global error handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
