@@ -1,204 +1,186 @@
-'use client'
+"use client"
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Camera, Video } from 'lucide-react';
-import { Button } from "./ui/button";
-import { useAuth } from '../contexts/AuthContext';
-import axios from 'axios';
-import { useToast } from "./ui/use-toast";
+import type React from "react"
+import { useState, useEffect, useRef } from "react"
+import { useNavigate } from "react-router-dom"
+import { ArrowLeft, Camera } from "lucide-react"
+import { Button } from "./ui/button"
+import { useAuth } from "../contexts/AuthContext"
+import axios from "axios"
+import { useToast } from "./ui/use-toast"
 
-const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5000"
 
 interface FormData {
-  displayName: string;
-  username: string;
-  bio: string;
-  instagram: string;
-  youtube: string;
+  displayName: string
+  username: string
+  bio: string
+  instagram: string
+  youtube: string
 }
 
 export default function EditProfile() {
-  const navigate = useNavigate();
-  const { user, token, updateUser } = useAuth();
-  const { toast } = useToast();
+  const navigate = useNavigate()
+  const { user, token, updateUser } = useAuth()
+  const { toast } = useToast()
   const [formData, setFormData] = useState<FormData>({
-    displayName: '',
-    username: '',
-    bio: '',
-    instagram: '',
-    youtube: '',
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+    displayName: "",
+    username: "",
+    bio: "",
+    instagram: "",
+    youtube: "",
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (user?.avatar) {
-      setPreviewImage(null); // Reset preview to use the actual avatar
+      setPreviewImage(null) // Reset preview to use the actual avatar
     }
     return () => {
       // Cleanup any object URLs when component unmounts
-      if (previewImage?.startsWith('blob:')) {
-        URL.revokeObjectURL(previewImage);
+      if (previewImage?.startsWith("blob:")) {
+        URL.revokeObjectURL(previewImage)
       }
-    };
-  }, [user?.avatar]);
+    }
+  }, [user?.avatar])
 
   useEffect(() => {
     if (user) {
       setFormData({
-        displayName: user.displayName || '',
-        username: user.username || '',
-        bio: user.bio || '',
-        instagram: user.instagram || '',
-        youtube: user.youtube || '',
-      });
+        displayName: user.displayName || "",
+        username: user.username || "",
+        bio: user.bio || "",
+        instagram: user.instagram || "",
+        youtube: user.youtube || "",
+      })
       if (user.avatar) {
-        setPreviewImage(null); // Reset preview to use the actual avatar
+        setPreviewImage(null) // Reset preview to use the actual avatar
       }
     }
-  }, [user]);
+  }, [user])
+
+  useEffect(() => {
+    if (user?.avatar) {
+      setPreviewImage(`${apiUrl}${user.avatar}?t=${Date.now()}`)
+    }
+  }, [user?.avatar])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
+    const file = e.target.files?.[0]
+    if (!file || !user) return
 
     // Set preview immediately using local file
-    const localPreview = URL.createObjectURL(file);
-    setPreviewImage(localPreview);
+    const localPreview = URL.createObjectURL(file)
+    setPreviewImage(localPreview)
 
     // Upload
-    const formData = new FormData();
-    formData.append('avatar', file);
+    const formData = new FormData()
+    formData.append("avatar", file)
 
     try {
-      const response = await axios.post(
-        `${apiUrl}/api/users/${user?._id}/avatar`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
+      const response = await axios.post(`${apiUrl}/api/users/${user?._id}/avatar`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      })
 
       // Update the user's avatar in the AuthContext with the new URL
       if (response.data.avatar) {
-        const updatedUser = { 
-          ...user, 
-          avatar: response.data.avatar 
-        };
-        updateUser(updatedUser);
+        const updatedUser = {
+          ...user,
+          avatar: response.data.avatar,
+        }
+        updateUser(updatedUser)
+        // Force a re-render by updating the previewImage state
+        setPreviewImage(`${apiUrl}${response.data.avatar}?t=${Date.now()}`)
       }
     } catch (error) {
-      console.error('Error uploading avatar:', error);
+      console.error("Error uploading avatar:", error)
       toast({
         title: "Error",
         description: "Failed to update profile picture",
         variant: "destructive",
-      });
+      })
       // Revert to previous avatar on error
-      setPreviewImage(null);
+      setPreviewImage(null)
     }
-  };
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user?._id || !token) return;
+    e.preventDefault()
+    if (!user?._id || !token) return
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
-      const response = await axios.put(
-        `${apiUrl}/api/users/${user._id}`,
-        formData,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await axios.put(`${apiUrl}/api/users/${user._id}`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
 
       // Update the user in the AuthContext
-      updateUser({ ...user, ...formData });
+      updateUser({ ...user, ...formData })
 
       toast({
         title: "Success",
         description: "Profile updated successfully",
-      });
-      
-      navigate('/profile');
+      })
+
+      navigate("/profile")
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error("Error updating profile:", error)
       toast({
         title: "Error",
         description: "Failed to update profile. Please try again.",
         variant: "destructive",
-      });
+      })
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-zinc-900 text-white">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => navigate(-1)}
-          className="text-white hover:bg-zinc-800"
-        >
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="text-white hover:bg-zinc-800">
           <ArrowLeft className="h-6 w-6" />
         </Button>
         <h1 className="text-lg font-semibold">Edit profile</h1>
         <div className="w-10" /> {/* Spacer for alignment */}
       </div>
 
-      {/* Profile Photo and Video */}
-      <div className="flex justify-center gap-12 py-8">
+      {/* Profile Photo */}
+      <div className="flex justify-center py-8">
         <div className="flex flex-col items-center gap-2">
           <div className="relative group">
-            <div className="w-24 h-24 rounded-full overflow-hidden bg-zinc-800">
+            <div className="w-32 h-32 rounded-full overflow-hidden bg-zinc-800">
               <img
-                src={previewImage || (user?.avatar ? `${apiUrl}${user.avatar}` : "/placeholder.svg")}
+                src={previewImage || (user?.avatar ? `${apiUrl}${user.avatar}?t=${Date.now()}` : "/placeholder.svg")}
                 alt="Profile"
                 className="w-full h-full object-cover"
               />
             </div>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept="image/*"
-              className="hidden"
-            />
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
             <Button
               variant="ghost"
               size="icon"
-              className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-[#d6191e] hover:bg-[#d6191e]/90 text-white"
+              className="absolute bottom-0 right-0 h-10 w-10 rounded-full bg-[#d6191e] hover:bg-[#d6191e]/90 text-white"
               onClick={() => fileInputRef.current?.click()}
             >
-              <Camera className="h-4 w-4" />
+              <Camera className="h-5 w-5" />
             </Button>
           </div>
           <span className="text-sm text-zinc-400">Change photo</span>
-        </div>
-        <div className="flex flex-col items-center gap-2">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-zinc-800 flex items-center justify-center">
-              <Video className="h-8 w-8 text-zinc-600" />
-            </div>
-          </div>
-          <span className="text-sm text-zinc-400">Change video</span>
         </div>
       </div>
 
@@ -234,7 +216,7 @@ export default function EditProfile() {
             <textarea
               name="bio"
               value={formData.bio}
-              onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, bio: e.target.value }))}
               placeholder="Add a bio to your profile"
               className="w-full mt-1 bg-transparent text-white focus:outline-none resize-none"
               rows={3}
@@ -266,45 +248,11 @@ export default function EditProfile() {
           </div>
         </div>
 
-        <Button 
-          type="submit" 
-          className="w-full bg-[#d6191e] text-white hover:bg-[#d6191e]/90"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Saving...' : 'Save'}
+        <Button type="submit" className="w-full bg-[#d6191e] text-white hover:bg-[#d6191e]/90" disabled={isSubmitting}>
+          {isSubmitting ? "Saving..." : "Save"}
         </Button>
       </form>
     </div>
-  );
+  )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
